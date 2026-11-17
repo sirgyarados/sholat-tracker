@@ -1,0 +1,1324 @@
+name: Build Sholat Tracker APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Generate Android Project Structure
+        run: |
+          mkdir -p app/src/main/java/id/sholattracker
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/xml
+          mkdir -p app/src/main/res/values
+
+          cat << 'EOF' > settings.gradle
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "SholatTracker"
+          include ':app'
+          EOF
+
+          cat << 'EOF' > build.gradle
+          plugins {
+              id 'com.android.application' version '8.3.2' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
+          }
+          EOF
+
+          cat << 'EOF' > gradle.properties
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          kotlin.code.style=official
+          android.nonTransitiveRClass=true
+          EOF
+
+          cat << 'EOF' > app/build.gradle
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
+
+          android {
+              namespace 'id.sholattracker'
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId "id.sholattracker"
+                  minSdk 26
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+
+              buildTypes {
+                  debug {
+                      minifyEnabled false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.12.0'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.material:material:1.11.0'
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/res/values/themes.xml
+          <resources>
+              <style name="Theme.SholatTracker" parent="Theme.Material3.Dark.NoActionBar">
+                  <item name="android:statusBarColor">#111318</item>
+                  <item name="android:navigationBarColor">#111318</item>
+                  <item name="android:windowBackground">#111318</item>
+              </style>
+          </resources>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#1E1F25"
+                  android:pathData="M0,0h108v108h-108z"/>
+              <path
+                  android:fillColor="#A8C7FA"
+                  android:pathData="M58,28A26,26 0,1 0,80 66A22,22 0,1 1,58 28Z"/>
+              <path
+                  android:fillColor="#81C995"
+                  android:pathData="M68,38l3,6l6,1l-4.5,4.2l1,6.3l-5.5,-3l-5.5,3l1,-6.3l-4.5,-4.2l6,-1z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_widget.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#BF1E1F25" />
+              <corners android:radius="24dp" />
+              <stroke android:width="1dp" android:color="#33FFFFFF" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_pill_active.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#2EA8C7FA" />
+              <corners android:radius="16dp" />
+              <stroke android:width="1dp" android:color="#66A8C7FA" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_pill_normal.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#00000000" />
+              <corners android:radius="16dp" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_check_on.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="28dp"
+              android:height="28dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#81C995"
+                  android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+              <path
+                  android:fillColor="#0F291E"
+                  android:pathData="M9.5,15.2L5.8,11.5l1.4,-1.4 2.3,2.3 6.3,-6.3 1.4,1.4 -7.7,7.7z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_check_off.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="28dp"
+              android:height="28dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#1AFFFFFF"
+                  android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+              <path
+                  android:fillColor="#75E2E2E6"
+                  android:pathData="M12,4c4.41,0 8,3.59 8,8s-3.59,8 -8,8 -8,-3.59 -8,-8 3.59,-8 8,-8m0,-2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/xml/sholat_widget_info.xml
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="280dp"
+              android:minHeight="64dp"
+              android:targetCellWidth="4"
+              android:targetCellHeight="1"
+              android:maxResizeWidth="500dp"
+              android:maxResizeHeight="110dp"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/widget_sholat"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+
+          cat << 'EOF' > app/src/main/res/layout/widget_sholat.xml
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/widget_root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@drawable/bg_widget"
+              android:gravity="center_vertical"
+              android:orientation="horizontal"
+              android:paddingHorizontal="8dp"
+              android:paddingVertical="6dp"
+              android:weightSum="5">
+
+              <LinearLayout
+                  android:id="@+id/col_box_0"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:orientation="vertical"
+                  android:paddingVertical="6dp">
+                  <LinearLayout
+                      android:id="@+id/col_open_0"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:orientation="vertical">
+                      <TextView
+                          android:id="@+id/tv_name_0"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Subuh"
+                          android:textColor="#C4C6D0"
+                          android:textSize="11sp" />
+                      <TextView
+                          android:id="@+id/tv_time_0"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="1dp"
+                          android:text="04:15"
+                          android:textColor="#E2E2E6"
+                          android:textSize="12sp"
+                          android:textStyle="bold" />
+                  </LinearLayout>
+                  <ImageView
+                      android:id="@+id/iv_check_0"
+                      android:layout_width="28dp"
+                      android:layout_height="28dp"
+                      android:layout_marginTop="5dp"
+                      android:padding="2dp"
+                      android:src="@drawable/ic_check_off" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/col_box_1"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:orientation="vertical"
+                  android:paddingVertical="6dp">
+                  <LinearLayout
+                      android:id="@+id/col_open_1"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:orientation="vertical">
+                      <TextView
+                          android:id="@+id/tv_name_1"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Dzuhur"
+                          android:textColor="#C4C6D0"
+                          android:textSize="11sp" />
+                      <TextView
+                          android:id="@+id/tv_time_1"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="1dp"
+                          android:text="11:50"
+                          android:textColor="#E2E2E6"
+                          android:textSize="12sp"
+                          android:textStyle="bold" />
+                  </LinearLayout>
+                  <ImageView
+                      android:id="@+id/iv_check_1"
+                      android:layout_width="28dp"
+                      android:layout_height="28dp"
+                      android:layout_marginTop="5dp"
+                      android:padding="2dp"
+                      android:src="@drawable/ic_check_off" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/col_box_2"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:orientation="vertical"
+                  android:paddingVertical="6dp">
+                  <LinearLayout
+                      android:id="@+id/col_open_2"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:orientation="vertical">
+                      <TextView
+                          android:id="@+id/tv_name_2"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Ashar"
+                          android:textColor="#C4C6D0"
+                          android:textSize="11sp" />
+                      <TextView
+                          android:id="@+id/tv_time_2"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="1dp"
+                          android:text="15:12"
+                          android:textColor="#E2E2E6"
+                          android:textSize="12sp"
+                          android:textStyle="bold" />
+                  </LinearLayout>
+                  <ImageView
+                      android:id="@+id/iv_check_2"
+                      android:layout_width="28dp"
+                      android:layout_height="28dp"
+                      android:layout_marginTop="5dp"
+                      android:padding="2dp"
+                      android:src="@drawable/ic_check_off" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/col_box_3"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:orientation="vertical"
+                  android:paddingVertical="6dp">
+                  <LinearLayout
+                      android:id="@+id/col_open_3"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:orientation="vertical">
+                      <TextView
+                          android:id="@+id/tv_name_3"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Maghrib"
+                          android:textColor="#C4C6D0"
+                          android:textSize="11sp" />
+                      <TextView
+                          android:id="@+id/tv_time_3"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="1dp"
+                          android:text="17:58"
+                          android:textColor="#E2E2E6"
+                          android:textSize="12sp"
+                          android:textStyle="bold" />
+                  </LinearLayout>
+                  <ImageView
+                      android:id="@+id/iv_check_3"
+                      android:layout_width="28dp"
+                      android:layout_height="28dp"
+                      android:layout_marginTop="5dp"
+                      android:padding="2dp"
+                      android:src="@drawable/ic_check_off" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/col_box_4"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:orientation="vertical"
+                  android:paddingVertical="6dp">
+                  <LinearLayout
+                      android:id="@+id/col_open_4"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:orientation="vertical">
+                      <TextView
+                          android:id="@+id/tv_name_4"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Isya"
+                          android:textColor="#C4C6D0"
+                          android:textSize="11sp" />
+                      <TextView
+                          android:id="@+id/tv_time_4"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="1dp"
+                          android:text="19:10"
+                          android:textColor="#E2E2E6"
+                          android:textSize="12sp"
+                          android:textStyle="bold" />
+                  </LinearLayout>
+                  <ImageView
+                      android:id="@+id/iv_check_4"
+                      android:layout_width="28dp"
+                      android:layout_height="28dp"
+                      android:layout_marginTop="5dp"
+                      android:padding="2dp"
+                      android:src="@drawable/ic_check_off" />
+              </LinearLayout>
+
+          </LinearLayout>
+          EOF
+
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+              <application
+                  android:allowBackup="true"
+                  android:icon="@drawable/ic_launcher"
+                  android:roundIcon="@drawable/ic_launcher"
+                  android:label="Sholat Tracker"
+                  android:supportsRtl="true"
+                  android:theme="@style/Theme.SholatTracker">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+
+                  <receiver
+                      android:name=".SholatWidget"
+                      android:exported="true"
+                      android:label="Sholat Tracker 5 Waktu">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                          <action android:name="id.sholattracker.ACTION_TOGGLE_PRAYER" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.appwidget.provider"
+                          android:resource="@xml/sholat_widget_info" />
+                  </receiver>
+
+              </application>
+          </manifest>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/id/sholattracker/SholatPrefs.kt
+          package id.sholattracker
+
+          import android.content.Context
+          import org.json.JSONObject
+          import java.net.HttpURLConnection
+          import java.net.URL
+          import java.net.URLEncoder
+          import java.time.LocalDate
+          import java.time.LocalTime
+          import java.time.YearMonth
+
+          object SholatPrefs {
+              private const val PREFS_NAME = "sholat_tracker_prefs"
+              val PRAYER_NAMES = arrayOf("Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya")
+              val DEFAULT_TIMES = arrayOf("04:15", "11:50", "15:12", "17:58", "19:10")
+
+              private fun prefs(context: Context) =
+                  context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+              fun isPrayerDone(context: Context, date: LocalDate, index: Int): Boolean {
+                  return prefs(context).getBoolean("done_${date}_$index", false)
+              }
+
+              fun togglePrayer(context: Context, date: LocalDate, index: Int): Boolean {
+                  val current = isPrayerDone(context, date, index)
+                  val next = !current
+                  prefs(context).edit().putBoolean("done_${date}_$index", next).apply()
+                  return next
+              }
+
+              fun getDayStatuses(context: Context, date: LocalDate): BooleanArray {
+                  return BooleanArray(5) { idx -> isPrayerDone(context, date, idx) }
+              }
+
+              fun isFullDay(context: Context, date: LocalDate): Boolean {
+                  for (i in 0..4) {
+                      if (!isPrayerDone(context, date, i)) return false
+                  }
+                  return true
+              }
+
+              fun getCurrentStreak(context: Context): Int {
+                  val today = LocalDate.now()
+                  var streak = 0
+                  var checkDate = if (isFullDay(context, today)) today else today.minusDays(1)
+                  while (isFullDay(context, checkDate)) {
+                      streak++
+                      checkDate = checkDate.minusDays(1)
+                  }
+                  return streak
+              }
+
+              fun getMonthProgress(context: Context, ym: YearMonth): Pair<Int, Int> {
+                  val today = LocalDate.now()
+                  val maxDay = if (ym == YearMonth.from(today)) today.dayOfMonth else ym.lengthOfMonth()
+                  var doneCount = 0
+                  for (d in 1..maxDay) {
+                      val date = ym.atDay(d)
+                      for (i in 0..4) {
+                          if (isPrayerDone(context, date, i)) doneCount++
+                      }
+                  }
+                  return Pair(doneCount, maxDay * 5)
+              }
+
+              fun getScheduleForDate(context: Context, date: LocalDate): Array<String> {
+                  val raw = prefs(context).getString("sched_$date", null) ?: return DEFAULT_TIMES
+                  val parts = raw.split(",")
+                  return if (parts.size == 5) parts.toTypedArray() else DEFAULT_TIMES
+              }
+
+              fun saveScheduleForDate(context: Context, dateStr: String, times: Array<String>) {
+                  prefs(context).edit().putString("sched_$dateStr", times.joinToString(",")).apply()
+              }
+
+              fun hasScheduleForMonth(context: Context, ym: YearMonth): Boolean {
+                  val firstDay = ym.atDay(1)
+                  return prefs(context).contains("sched_$firstDay")
+              }
+
+              fun getCityName(context: Context): String {
+                  return prefs(context).getString("city_name", "Kota Tangerang Selatan") ?: "Kota Tangerang Selatan"
+              }
+
+              fun getCityId(context: Context): String {
+                  return prefs(context).getString("city_id", "1108") ?: "1108"
+              }
+
+              fun saveCity(context: Context, cityId: String, cityName: String) {
+                  prefs(context).edit()
+                      .putString("city_id", cityId)
+                      .putString("city_name", cityName)
+                      .apply()
+              }
+
+              fun getActivePrayerIndex(times: Array<String>): Int {
+                  return try {
+                      val now = LocalTime.now()
+                      val parsed = times.map {
+                          val p = it.trim().split(":")
+                          LocalTime.of(p[0].toInt(), p[1].toInt())
+                      }
+                      when {
+                          now.isBefore(parsed[0]) -> 0
+                          now.isBefore(parsed[1]) -> 0
+                          now.isBefore(parsed[2]) -> 1
+                          now.isBefore(parsed[3]) -> 2
+                          now.isBefore(parsed[4]) -> 3
+                          else -> 4
+                      }
+                  } catch (e: Exception) {
+                      0
+                  }
+              }
+
+              fun syncKemenagSchedule(context: Context, rawCityQuery: String?, ym: YearMonth): Boolean {
+                  return try {
+                      var cityId = getCityId(context)
+                      var cityName = getCityName(context)
+
+                      if (!rawCityQuery.isNullOrBlank()) {
+                          val cleanQuery = rawCityQuery
+                              .replace("Kota Administrasi", "", ignoreCase = true)
+                              .replace("Kabupaten", "", ignoreCase = true)
+                              .replace("Kota", "", ignoreCase = true)
+                              .replace("South Tangerang", "Tangerang Selatan", ignoreCase = true)
+                              .replace("Jakarta", "Jakarta", ignoreCase = true)
+                              .trim()
+
+                          if (cleanQuery.isNotEmpty()) {
+                              val encoded = URLEncoder.encode(cleanQuery, "UTF-8")
+                              val searchJson = httpGet("https://api.myquran.com/v2/sholat/kota/cari/$encoded")
+                              if (searchJson != null) {
+                                  val root = JSONObject(searchJson)
+                                  if (root.optBoolean("status", false)) {
+                                      val dataArr = root.optJSONArray("data")
+                                      if (dataArr != null && dataArr.length() > 0) {
+                                          val first = dataArr.getJSONObject(0)
+                                          cityId = first.getString("id")
+                                          cityName = first.getString("lokasi")
+                                          saveCity(context, cityId, cityName)
+                                      }
+                                  }
+                              }
+                          }
+                      }
+
+                      val monthStr = String.format("%02d", ym.monthValue)
+                      val schedUrl = "https://api.myquran.com/v2/sholat/jadwal/$cityId/${ym.year}/$monthStr"
+                      val schedJson = httpGet(schedUrl) ?: return false
+                      val root = JSONObject(schedJson)
+                      if (!root.optBoolean("status", false)) return false
+
+                      val dataObj = root.getJSONObject("data")
+                      val lokasi = dataObj.optString("lokasi", cityName)
+                      saveCity(context, cityId, lokasi)
+
+                      val jadwalArr = dataObj.getJSONArray("jadwal")
+                      for (i in 0 until jadwalArr.length()) {
+                          val item = jadwalArr.getJSONObject(i)
+                          val dateStr = item.getString("date")
+                          val times = arrayOf(
+                              item.getString("subuh"),
+                              item.getString("dzuhur"),
+                              item.getString("ashar"),
+                              item.getString("maghrib"),
+                              item.getString("isya")
+                          )
+                          saveScheduleForDate(context, dateStr, times)
+                      }
+                      true
+                  } catch (e: Exception) {
+                      false
+                  }
+              }
+
+              private fun httpGet(urlStr: String): String? {
+                  val conn = URL(urlStr).openConnection() as HttpURLConnection
+                  return try {
+                      conn.requestMethod = "GET"
+                      conn.connectTimeout = 8000
+                      conn.readTimeout = 8000
+                      if (conn.responseCode == 200) {
+                          conn.inputStream.bufferedReader().use { it.readText() }
+                      } else null
+                  } catch (e: Exception) {
+                      null
+                  } finally {
+                      conn.disconnect()
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/id/sholattracker/SholatWidget.kt
+          package id.sholattracker
+
+          import android.app.PendingIntent
+          import android.appwidget.AppWidgetManager
+          import android.appwidget.AppWidgetProvider
+          import android.content.ComponentName
+          import android.content.Context
+          import android.content.Intent
+          import android.widget.RemoteViews
+          import java.time.LocalDate
+          import java.time.YearMonth
+          import kotlin.concurrent.thread
+
+          class SholatWidget : AppWidgetProvider() {
+
+              override fun onUpdate(
+                  context: Context,
+                  appWidgetManager: AppWidgetManager,
+                  appWidgetIds: IntArray
+              ) {
+                  updateAllWidgets(context)
+                  val ym = YearMonth.now()
+                  if (!SholatPrefs.hasScheduleForMonth(context, ym)) {
+                      thread {
+                          if (SholatPrefs.syncKemenagSchedule(context, null, ym)) {
+                              updateAllWidgets(context)
+                          }
+                      }
+                  }
+              }
+
+              override fun onReceive(context: Context, intent: Intent) {
+                  super.onReceive(context, intent)
+                  if (intent.action == ACTION_TOGGLE_PRAYER) {
+                      val index = intent.getIntExtra(EXTRA_PRAYER_INDEX, -1)
+                      if (index in 0..4) {
+                          SholatPrefs.togglePrayer(context, LocalDate.now(), index)
+                          updateAllWidgets(context)
+                      }
+                  }
+              }
+
+              companion object {
+                  const val ACTION_TOGGLE_PRAYER = "id.sholattracker.ACTION_TOGGLE_PRAYER"
+                  const val EXTRA_PRAYER_INDEX = "extra_prayer_index"
+
+                  private val BOX_IDS = intArrayOf(
+                      R.id.col_box_0, R.id.col_box_1, R.id.col_box_2, R.id.col_box_3, R.id.col_box_4
+                  )
+                  private val OPEN_IDS = intArrayOf(
+                      R.id.col_open_0, R.id.col_open_1, R.id.col_open_2, R.id.col_open_3, R.id.col_open_4
+                  )
+                  private val TIME_IDS = intArrayOf(
+                      R.id.tv_time_0, R.id.tv_time_1, R.id.tv_time_2, R.id.tv_time_3, R.id.tv_time_4
+                  )
+                  private val CHECK_IDS = intArrayOf(
+                      R.id.iv_check_0, R.id.iv_check_1, R.id.iv_check_2, R.id.iv_check_3, R.id.iv_check_4
+                  )
+
+                  fun updateAllWidgets(context: Context) {
+                      val manager = AppWidgetManager.getInstance(context)
+                      val ids = manager.getAppWidgetIds(ComponentName(context, SholatWidget::class.java))
+                      for (id in ids) {
+                          updateSingleWidget(context, manager, id)
+                      }
+                  }
+
+                  private fun updateSingleWidget(
+                      context: Context,
+                      manager: AppWidgetManager,
+                      appWidgetId: Int
+                  ) {
+                      val views = RemoteViews(context.packageName, R.layout.widget_sholat)
+                      val today = LocalDate.now()
+                      val times = SholatPrefs.getScheduleForDate(context, today)
+                      val activeIndex = SholatPrefs.getActivePrayerIndex(times)
+
+                      val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                          flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                      }
+                      val openAppPending = PendingIntent.getActivity(
+                          context,
+                          100,
+                          openAppIntent,
+                          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                      )
+                      views.setOnClickPendingIntent(R.id.widget_root, openAppPending)
+
+                      for (i in 0..4) {
+                          views.setTextViewText(TIME_IDS[i], times[i])
+                          val done = SholatPrefs.isPrayerDone(context, today, i)
+                          views.setImageViewResource(
+                              CHECK_IDS[i],
+                              if (done) R.drawable.ic_check_on else R.drawable.ic_check_off
+                          )
+                          views.setInt(
+                              BOX_IDS[i],
+                              "setBackgroundResource",
+                              if (i == activeIndex) R.drawable.bg_pill_active else R.drawable.bg_pill_normal
+                          )
+
+                          views.setOnClickPendingIntent(OPEN_IDS[i], openAppPending)
+
+                          val toggleIntent = Intent(context, SholatWidget::class.java).apply {
+                              action = ACTION_TOGGLE_PRAYER
+                              putExtra(EXTRA_PRAYER_INDEX, i)
+                          }
+                          val togglePending = PendingIntent.getBroadcast(
+                              context,
+                              200 + i,
+                              toggleIntent,
+                              PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                          )
+                          views.setOnClickPendingIntent(CHECK_IDS[i], togglePending)
+                      }
+
+                      manager.updateAppWidget(appWidgetId, views)
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/id/sholattracker/MainActivity.kt
+          package id.sholattracker
+
+          import android.Manifest
+          import android.content.Context
+          import android.content.pm.PackageManager
+          import android.graphics.Color
+          import android.graphics.Typeface
+          import android.graphics.drawable.GradientDrawable
+          import android.location.Geocoder
+          import android.location.LocationManager
+          import android.os.Bundle
+          import android.util.TypedValue
+          import android.view.Gravity
+          import android.view.View
+          import android.widget.*
+          import androidx.appcompat.app.AppCompatActivity
+          import androidx.core.app.ActivityCompat
+          import androidx.core.content.ContextCompat
+          import java.time.LocalDate
+          import java.time.YearMonth
+          import java.time.format.DateTimeFormatter
+          import java.util.Locale
+          import kotlin.concurrent.thread
+
+          class MainActivity : AppCompatActivity() {
+
+              private var selectedDate: LocalDate = LocalDate.now()
+              private var displayedMonth: YearMonth = YearMonth.now()
+              private val indoLocale = Locale("id", "ID")
+
+              private lateinit var tvLocation: TextView
+              private lateinit var tvStreakValue: TextView
+              private lateinit var tvMonthPercent: TextView
+              private lateinit var tvSelectedDateTitle: TextView
+              private lateinit var layoutDayEditorRow: LinearLayout
+              private lateinit var tvMonthTitle: TextView
+              private lateinit var calendarGrid: GridLayout
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setupUI()
+                  refreshAllUI()
+                  checkLocationAndSync(false)
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  refreshAllUI()
+              }
+
+              private fun dp(value: Int): Int =
+                  TypedValue.applyDimension(
+                      TypedValue.COMPLEX_UNIT_DIP,
+                      value.toFloat(),
+                      resources.displayMetrics
+                  ).toInt()
+
+              private fun makeCardBg(fillColor: String, strokeColor: String = "#26FFFFFF", radiusDp: Int = 20): GradientDrawable {
+                  return GradientDrawable().apply {
+                      shape = GradientDrawable.RECTANGLE
+                      cornerRadius = dp(radiusDp).toFloat()
+                      setColor(Color.parseColor(fillColor))
+                      setStroke(dp(1), Color.parseColor(strokeColor))
+                  }
+              }
+
+              private fun setupUI() {
+                  val scroll = ScrollView(this).apply {
+                      setBackgroundColor(Color.parseColor("#111318"))
+                      isFillViewport = true
+                  }
+
+                  val root = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(dp(16), dp(20), dp(16), dp(32))
+                  }
+                  scroll.addView(root)
+
+                  // Header Row
+                  val headerRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      gravity = Gravity.CENTER_VERTICAL
+                  }
+                  val titleCol = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                  }
+                  val tvTitle = TextView(this).apply {
+                      text = "Sholat Tracker"
+                      setTextColor(Color.parseColor("#E2E2E6"))
+                      textSize = 22f
+                      setTypeface(typeface, Typeface.BOLD)
+                  }
+                  tvLocation = TextView(this).apply {
+                      text = "📍 ${SholatPrefs.getCityName(this@MainActivity)} • Kemenag"
+                      setTextColor(Color.parseColor("#A8C7FA"))
+                      textSize = 13f
+                      setPadding(0, dp(2), 0, 0)
+                  }
+                  titleCol.addView(tvTitle)
+                  titleCol.addView(tvLocation)
+
+                  val btnSyncGps = TextView(this).apply {
+                      text = "Update GPS"
+                      setTextColor(Color.parseColor("#E2E2E6"))
+                      textSize = 12f
+                      background = makeCardBg("#1E1F25", "#40A8C7FA", 14)
+                      setPadding(dp(12), dp(8), dp(12), dp(8))
+                      setOnClickListener { checkLocationAndSync(true) }
+                  }
+                  headerRow.addView(titleCol)
+                  headerRow.addView(btnSyncGps)
+                  root.addView(headerRow)
+
+                  // Stats Row (Current Streak & Capaian Bulan Ini)
+                  val statsRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      weightSum = 2f
+                      layoutParams = LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT,
+                          LinearLayout.LayoutParams.WRAP_CONTENT
+                      ).apply { topMargin = dp(18) }
+                  }
+
+                  val streakCard = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      background = makeCardBg("#1E1F25", "#3381C995", 20)
+                      setPadding(dp(16), dp(14), dp(16), dp(14))
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                          rightMargin = dp(6)
+                      }
+                  }
+                  val tvStreakLabel = TextView(this).apply {
+                      text = "Current Streak (5/5)"
+                      setTextColor(Color.parseColor("#C4C6D0"))
+                      textSize = 12f
+                  }
+                  tvStreakValue = TextView(this).apply {
+                      text = "0 Hari"
+                      setTextColor(Color.parseColor("#81C995"))
+                      textSize = 22f
+                      setTypeface(typeface, Typeface.BOLD)
+                      setPadding(0, dp(4), 0, 0)
+                  }
+                  streakCard.addView(tvStreakLabel)
+                  streakCard.addView(tvStreakValue)
+
+                  val monthCard = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      background = makeCardBg("#1E1F25", "#33A8C7FA", 20)
+                      setPadding(dp(16), dp(14), dp(16), dp(14))
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                          leftMargin = dp(6)
+                      }
+                  }
+                  val tvMonthLabel = TextView(this).apply {
+                      text = "Progres Bulan Ini"
+                      setTextColor(Color.parseColor("#C4C6D0"))
+                      textSize = 12f
+                  }
+                  tvMonthPercent = TextView(this).apply {
+                      text = "0%"
+                      setTextColor(Color.parseColor("#A8C7FA"))
+                      textSize = 22f
+                      setTypeface(typeface, Typeface.BOLD)
+                      setPadding(0, dp(4), 0, 0)
+                  }
+                  monthCard.addView(tvMonthLabel)
+                  monthCard.addView(tvMonthPercent)
+
+                  statsRow.addView(streakCard)
+                  statsRow.addView(monthCard)
+                  root.addView(statsRow)
+
+                  // Selected Day Editor Card (Bisa Edit Nyusul)
+                  val editorCard = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      background = makeCardBg("#1E1F25", "#33FFFFFF", 22)
+                      setPadding(dp(14), dp(14), dp(14), dp(14))
+                      layoutParams = LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT,
+                          LinearLayout.LayoutParams.WRAP_CONTENT
+                      ).apply { topMargin = dp(16) }
+                  }
+
+                  tvSelectedDateTitle = TextView(this).apply {
+                      text = "Hari Ini"
+                      setTextColor(Color.parseColor("#E2E2E6"))
+                      textSize = 14f
+                      setTypeface(typeface, Typeface.BOLD)
+                      setPadding(dp(4), 0, dp(4), dp(10))
+                  }
+                  layoutDayEditorRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      weightSum = 5f
+                  }
+                  editorCard.addView(tvSelectedDateTitle)
+                  editorCard.addView(layoutDayEditorRow)
+                  root.addView(editorCard)
+
+                  // Calendar Card
+                  val calCard = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      background = makeCardBg("#1E1F25", "#33FFFFFF", 22)
+                      setPadding(dp(14), dp(16), dp(14), dp(16))
+                      layoutParams = LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT,
+                          LinearLayout.LayoutParams.WRAP_CONTENT
+                      ).apply { topMargin = dp(16) }
+                  }
+
+                  val calHeader = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      gravity = Gravity.CENTER_VERTICAL
+                      setPadding(0, 0, 0, dp(12))
+                  }
+                  val btnPrev = TextView(this).apply {
+                      text = "◀"
+                      setTextColor(Color.parseColor("#A8C7FA"))
+                      textSize = 16f
+                      setPadding(dp(12), dp(4), dp(12), dp(4))
+                      setOnClickListener {
+                          displayedMonth = displayedMonth.minusMonths(1)
+                          ensureMonthSchedule(displayedMonth)
+                          refreshAllUI()
+                      }
+                  }
+                  tvMonthTitle = TextView(this).apply {
+                      text = ""
+                      setTextColor(Color.parseColor("#E2E2E6"))
+                      textSize = 16f
+                      setTypeface(typeface, Typeface.BOLD)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                  }
+                  val btnNext = TextView(this).apply {
+                      text = "▶"
+                      setTextColor(Color.parseColor("#A8C7FA"))
+                      textSize = 16f
+                      setPadding(dp(12), dp(4), dp(12), dp(4))
+                      setOnClickListener {
+                          displayedMonth = displayedMonth.plusMonths(1)
+                          ensureMonthSchedule(displayedMonth)
+                          refreshAllUI()
+                      }
+                  }
+                  calHeader.addView(btnPrev)
+                  calHeader.addView(tvMonthTitle)
+                  calHeader.addView(btnNext)
+                  calCard.addView(calHeader)
+
+                  // Weekday names
+                  val weekRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      weightSum = 7f
+                      setPadding(0, 0, 0, dp(6))
+                  }
+                  val days = arrayOf("Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min")
+                  for (dName in days) {
+                      val tv = TextView(this).apply {
+                          text = dName
+                          setTextColor(Color.parseColor("#8E9099"))
+                          textSize = 12f
+                          gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      }
+                      weekRow.addView(tv)
+                  }
+                  calCard.addView(weekRow)
+
+                  calendarGrid = GridLayout(this).apply {
+                      columnCount = 7
+                      layoutParams = LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT,
+                          LinearLayout.LayoutParams.WRAP_CONTENT
+                      )
+                  }
+                  calCard.addView(calendarGrid)
+
+                  val tvHint = TextView(this).apply {
+                      text = "Tip: Ketuk tanggal mana saja di kalender untuk melihat atau menyusul ceklis sholat yang terlewat."
+                      setTextColor(Color.parseColor("#8E9099"))
+                      textSize = 11f
+                      setPadding(dp(4), dp(12), dp(4), 0)
+                  }
+                  calCard.addView(tvHint)
+
+                  root.addView(calCard)
+                  setContentView(scroll)
+              }
+
+              private fun refreshAllUI() {
+                  tvLocation.text = "📍 ${SholatPrefs.getCityName(this)} • Kemenag"
+
+                  val streak = SholatPrefs.getCurrentStreak(this)
+                  tvStreakValue.text = "🔥 $streak Hari"
+
+                  val (doneCount, totalCount) = SholatPrefs.getMonthProgress(this, displayedMonth)
+                  val pct = if (totalCount > 0) (doneCount * 100) / totalCount else 0
+                  tvMonthPercent.text = "$pct% ($doneCount/$totalCount)"
+
+                  renderSelectedDateEditor()
+                  renderCalendarGrid()
+                  SholatWidget.updateAllWidgets(this)
+              }
+
+              private fun renderSelectedDateEditor() {
+                  val today = LocalDate.now()
+                  val fmt = DateTimeFormatter.ofPattern("EEEE, d MMM yyyy", indoLocale)
+                  val labelSuffix = when (selectedDate) {
+                      today -> " (Hari Ini)"
+                      today.minusDays(1) -> " (Kemarin)"
+                      else -> ""
+                  }
+                  tvSelectedDateTitle.text = "Status Sholat: ${selectedDate.format(fmt)}$labelSuffix"
+
+                  layoutDayEditorRow.removeAllViews()
+                  val times = SholatPrefs.getScheduleForDate(this, selectedDate)
+                  val statuses = SholatPrefs.getDayStatuses(this, selectedDate)
+
+                  for (i in 0..4) {
+                      val col = LinearLayout(this).apply {
+                          orientation = LinearLayout.VERTICAL
+                          gravity = Gravity.CENTER
+                          setPadding(dp(2), dp(8), dp(2), dp(8))
+                          layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                              marginStart = dp(2)
+                              marginEnd = dp(2)
+                          }
+                          background = if (statuses[i]) {
+                              makeCardBg("#1F81C995", "#6681C995", 14)
+                          } else {
+                              makeCardBg("#14FFFFFF", "#1FFFFFFF", 14)
+                          }
+                          setOnClickListener {
+                              SholatPrefs.togglePrayer(this@MainActivity, selectedDate, i)
+                              refreshAllUI()
+                          }
+                      }
+
+                      val tvName = TextView(this).apply {
+                          text = SholatPrefs.PRAYER_NAMES[i]
+                          setTextColor(Color.parseColor("#C4C6D0"))
+                          textSize = 11f
+                      }
+                      val tvTime = TextView(this).apply {
+                          text = times[i]
+                          setTextColor(Color.parseColor("#E2E2E6"))
+                          textSize = 12f
+                          setTypeface(typeface, Typeface.BOLD)
+                          setPadding(0, dp(2), 0, dp(6))
+                      }
+                      val ivCheck = ImageView(this).apply {
+                          setImageResource(if (statuses[i]) R.drawable.ic_check_on else R.drawable.ic_check_off)
+                          layoutParams = LinearLayout.LayoutParams(dp(26), dp(26))
+                      }
+
+                      col.addView(tvName)
+                      col.addView(tvTime)
+                      col.addView(ivCheck)
+                      layoutDayEditorRow.addView(col)
+                  }
+              }
+
+              private fun renderCalendarGrid() {
+                  val monthFmt = DateTimeFormatter.ofPattern("MMMM yyyy", indoLocale)
+                  tvMonthTitle.text = displayedMonth.atDay(1).format(monthFmt).replaceFirstChar { it.uppercase() }
+
+                  calendarGrid.removeAllViews()
+
+                  val firstDayOfMonth = displayedMonth.atDay(1)
+                  val leadingEmpty = firstDayOfMonth.dayOfWeek.value - 1 // Monday = 0
+                  val daysInMonth = displayedMonth.lengthOfMonth()
+                  val today = LocalDate.now()
+
+                  val totalCells = ((leadingEmpty + daysInMonth + 6) / 7) * 7
+
+                  for (cellIndex in 0 until totalCells) {
+                      val dayNum = cellIndex - leadingEmpty + 1
+                      val cellLayout = LinearLayout(this).apply {
+                          orientation = LinearLayout.VERTICAL
+                          gravity = Gravity.CENTER
+                          setPadding(dp(2), dp(6), dp(2), dp(6))
+                          layoutParams = GridLayout.LayoutParams().apply {
+                              width = 0
+                              height = GridLayout.LayoutParams.WRAP_CONTENT
+                              columnSpec = GridLayout.spec(cellIndex % 7, 1f)
+                              setMargins(dp(2), dp(3), dp(2), dp(3))
+                          }
+                      }
+
+                      if (dayNum in 1..daysInMonth) {
+                          val date = displayedMonth.atDay(dayNum)
+                          val isSelected = date == selectedDate
+                          val isToday = date == today
+
+                          cellLayout.background = when {
+                              isSelected -> makeCardBg("#2EA8C7FA", "#A8C7FA", 12)
+                              isToday -> makeCardBg("#1AFFFFFF", "#55FFFFFF", 12)
+                              else -> makeCardBg("#00000000", "#00000000", 12)
+                          }
+
+                          val tvDay = TextView(this).apply {
+                              text = dayNum.toString()
+                              textSize = 13f
+                              setTypeface(typeface, if (isToday || isSelected) Typeface.BOLD else Typeface.NORMAL)
+                              setTextColor(
+                                  when {
+                                      date.isAfter(today) -> Color.parseColor("#55E2E2E6")
+                                      isSelected -> Color.parseColor("#A8C7FA")
+                                      else -> Color.parseColor("#E2E2E6")
+                                  }
+                              )
+                          }
+                          cellLayout.addView(tvDay)
+
+                          // 5 Dots Indicator (Subuh - Isya)
+                          val dotsRow = LinearLayout(this).apply {
+                              orientation = LinearLayout.HORIZONTAL
+                              gravity = Gravity.CENTER
+                              setPadding(0, dp(4), 0, 0)
+                          }
+                          val statuses = SholatPrefs.getDayStatuses(this, date)
+                          for (i in 0..4) {
+                              val dot = View(this).apply {
+                                  val size = dp(5)
+                                  layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                                      setMargins(dp(1), 0, dp(1), 0)
+                                  }
+                                  background = GradientDrawable().apply {
+                                      shape = GradientDrawable.OVAL
+                                      setColor(
+                                          if (statuses[i]) Color.parseColor("#81C995")
+                                          else Color.parseColor("#2EFFFFFF")
+                                      )
+                                  }
+                              }
+                              dotsRow.addView(dot)
+                          }
+                          cellLayout.addView(dotsRow)
+
+                          cellLayout.setOnClickListener {
+                              selectedDate = date
+                              refreshAllUI()
+                          }
+                      }
+
+                      calendarGrid.addView(cellLayout)
+                  }
+              }
+
+              private fun ensureMonthSchedule(ym: YearMonth) {
+                  if (!SholatPrefs.hasScheduleForMonth(this, ym)) {
+                      thread {
+                          if (SholatPrefs.syncKemenagSchedule(this, null, ym)) {
+                              runOnUiThread { refreshAllUI() }
+                          }
+                      }
+                  }
+              }
+
+              private fun checkLocationAndSync(forceToast: Boolean) {
+                  val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                  val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                  if (fine != PackageManager.PERMISSION_GRANTED && coarse != PackageManager.PERMISSION_GRANTED) {
+                      ActivityCompat.requestPermissions(
+                          this,
+                          arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
+                          101
+                      )
+                  } else {
+                      fetchGpsAndSyncKemenag(forceToast)
+                  }
+              }
+
+              override fun onRequestPermissionsResult(
+                  requestCode: Int,
+                  permissions: Array<out String>,
+                  grantResults: IntArray
+              ) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+                  if (requestCode == 101) {
+                      fetchGpsAndSyncKemenag(true)
+                  }
+              }
+
+              @Suppress("MissingPermission")
+              private fun fetchGpsAndSyncKemenag(showFeedback: Boolean) {
+                  if (showFeedback) {
+                      Toast.makeText(this, "Menyelaraskan lokasi GPS & jadwal Kemenag...", Toast.LENGTH_SHORT).show()
+                  }
+                  thread {
+                      var detectedCity: String? = null
+                      try {
+                          val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                          val loc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                              ?: lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                          if (loc != null) {
+                              val geocoder = Geocoder(this, indoLocale)
+                              val addresses = geocoder.getFromLocation(loc.latitude, loc.longitude, 1)
+                              if (!addresses.isNullOrEmpty()) {
+                                  val addr = addresses[0]
+                                  detectedCity = addr.subAdminArea ?: addr.locality ?: addr.adminArea
+                              }
+                          }
+                      } catch (_: Exception) {}
+
+                      val ok = SholatPrefs.syncKemenagSchedule(this, detectedCity, displayedMonth)
+                      runOnUiThread {
+                          refreshAllUI()
+                          if (showFeedback) {
+                              val msg = if (ok) "Jadwal Kemenag (${SholatPrefs.getCityName(this)}) diperbarui!"
+                              else "Menggunakan jadwal tersimpan (${SholatPrefs.getCityName(this)})"
+                              Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Compile Debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Prepare Release APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk sholat-tracker-widget.apk
+
+      - name: Upload APK to Actions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sholat-tracker-widget
+          path: sholat-tracker-widget.apk
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Sholat Tracker Widget v1.0.${{ github.run_number }}"
+          files: sholat-tracker-widget.apk
+          make_latest: true
